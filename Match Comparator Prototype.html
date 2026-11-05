@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Match Comparator · iOS Liquid Glass Edition</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Chart.js for Radar Chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Phosphor Icons for iOS-style icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', '"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+          },
+          colors: {
+            glass: {
+              bg: 'rgba(255, 255, 255, 0.45)',
+              bgDark: 'rgba(24, 24, 28, 0.55)',
+              border: 'rgba(255, 255, 255, 0.35)',
+              borderDark: 'rgba(255, 255, 255, 0.12)',
+              card: 'rgba(255, 255, 255, 0.65)',
+              cardDark: 'rgba(32, 33, 38, 0.65)'
+            }
+          },
+          boxShadow: {
+            'liquid': '0 12px 30px -10px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.4) inset',
+            'liquid-dark': '0 15px 35px -10px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08) inset',
+            'floating-nav': '0 10px 30px -5px rgba(0, 0, 0, 0.15), 0 0 1px 1px rgba(255, 255, 255, 0.4) inset'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* -------------------------------------------------------------
+       CUSTOM BACKGROUND IMAGE (EDIT YOUR BACKGROUND IMAGE URL HERE)
+       ------------------------------------------------------------- */
+    .bg-custom-image {
+      /* GANTI LINK GAMBAR DI BAWAH INI SESUAI KEINGINAN */
+      background-image: url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    /* Overlay untuk menjaga legibilitas teks di atas background gambar */
+    .bg-custom-overlay {
+      background: rgba(242, 242, 247, 0.85);
+      backdrop-filter: blur(12px);
+    }
+    .dark .bg-custom-overlay {
+      background: rgba(12, 13, 16, 0.88);
+      backdrop-filter: blur(12px);
+    }
+
+    /* iOS Liquid Glass Effect Utilities (Clean, No Neon Effects) */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(24px) saturate(190%);
+      -webkit-backdrop-filter: blur(24px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 28px;
+    }
+
+    .dark .glass-panel {
+      background: rgba(26, 27, 32, 0.75);
+      backdrop-filter: blur(24px) saturate(190%);
+      -webkit-backdrop-filter: blur(24px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .glass-input {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 9999px;
+      transition: all 0.25s ease;
+    }
+
+    .dark .glass-input {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    .glass-input:focus {
+      outline: none;
+      border-color: #007AFF;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+    }
+
+    .glass-button {
+      background: #007AFF;
+      color: #ffffff;
+      backdrop-filter: blur(10px);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+    }
+
+    .glass-button:hover {
+      transform: translateY(-2px);
+      background: #0066CC;
+    }
+
+    .glass-button:active {
+      transform: translateY(1px);
+    }
+
+    /* Floating Navigation Styling */
+    .floating-nav {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(25px) saturate(200%);
+      -webkit-backdrop-filter: blur(25px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 9999px;
+    }
+
+    .dark .floating-nav {
+      background: rgba(30, 31, 36, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    /* Custom Horizontal Segmented Bar */
+    .timeline-segment {
+      transition: flex-grow 0.5s ease, opacity 0.2s ease;
+    }
+    .timeline-segment:hover {
+      opacity: 0.85;
+      transform: scaleY(1.08);
+    }
+  </style>
+</head>
+<body class="font-sans text-gray-900 dark:text-gray-100 antialiased min-h-screen pb-32 bg-custom-image">
+
+  <!-- Overlay container for background picture -->
+  <div class="fixed inset-0 bg-custom-overlay z-[-1]"></div>
+
+  <!-- Main Container (Floating Padding System) -->
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-10 space-y-6 sm:space-y-8">
+
+    <!-- Top App Header Bar -->
+    <header class="flex items-center justify-between glass-panel px-6 py-4 shadow-liquid dark:shadow-liquid-dark">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white">
+          <i class="ph-bold ph-chart-polar text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight">MATCH COMPARATOR</h1>
+          <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Statistical Analysis & Prediction Engine · v0.1</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="themeToggle" class="w-10 h-10 rounded-full glass-input flex items-center justify-center hover:bg-white/40 dark:hover:bg-white/10 transition">
+          <i class="ph-bold ph-moon dark:hidden text-gray-700"></i>
+          <i class="ph-bold ph-sun hidden dark:block text-amber-400"></i>
+        </button>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+          Live Data Ready
+        </span>
+      </div>
+    </header>
+
+    <!-- SECTION 1: Match Input Card (Floating Glass Card) -->
+    <section class="glass-panel p-6 sm:p-8 shadow-liquid dark:shadow-liquid-dark">
+      <div class="mb-6 flex items-center gap-2 text-xs font-semibold tracking-wider text-blue-600 dark:text-blue-400 uppercase">
+        <i class="ph-bold ph-link-simple text-sm"></i> Match Input & Data Source
+      </div>
+      
+      <form id="matchForm" onsubmit="handleCompare(event)" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <!-- Team A Input -->
+          <div class="space-y-2">
+            <label class="text-xs font-medium text-gray-600 dark:text-gray-300 ml-1">Team A Stats URL (SofaScore / FotMob / FlashScore)</label>
+            <div class="relative">
+              <i class="ph-bold ph-shield text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 text-lg"></i>
+              <input type="url" id="teamAUrl" required placeholder="https://www.fotmob.com/teams/8634/real-madrid" 
+                value="https://www.sofascore.com/team/football/real-madrid/2829"
+                class="w-full glass-input pl-11 pr-4 py-3 text-sm focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Team B Input -->
+          <div class="space-y-2">
+            <label class="text-xs font-medium text-gray-600 dark:text-gray-300 ml-1">Team B Stats URL (SofaScore / FotMob / FlashScore)</label>
+            <div class="relative">
+              <i class="ph-bold ph-shield text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 text-lg"></i>
+              <input type="url" id="teamBUrl" required placeholder="https://www.fotmob.com/teams/9825/arsenal" 
+                value="https://www.sofascore.com/team/football/barcelona/2817"
+                class="w-full glass-input pl-11 pr-4 py-3 text-sm focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Parameters Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="text-xs font-medium text-gray-600 dark:text-gray-300 ml-1 mb-1 block">Competition</label>
+            <select id="competition" class="w-full glass-input px-4 py-2.5 text-sm appearance-none bg-no-repeat bg-right pr-8">
+              <option value="UEFA Champions League">UEFA Champions League</option>
+              <option value="Premier League">Premier League</option>
+              <option value="La Liga">La Liga</option>
+              <option value="Serie A">Serie A</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-600 dark:text-gray-300 ml-1 mb-1 block">Team A Status</label>
+            <select id="teamAStatus" class="w-full glass-input px-4 py-2.5 text-sm">
+              <option value="Home">Home (Kandang)</option>
+              <option value="Away">Away (Tandang)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-600 dark:text-gray-300 ml-1 mb-1 block">Sample Size Filter</label>
+            <select id="sampleFilter" class="w-full glass-input px-4 py-2.5 text-sm">
+              <option value="Last 10 Matches">Last 10 Matches (Recommended)</option>
+              <option value="Last 5 Matches">Last 5 Matches (Recent Form)</option>
+              <option value="All Season">All Season Matches</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex justify-center pt-2">
+          <button type="submit" class="glass-button text-white font-medium text-sm px-8 py-3.5 rounded-full flex items-center gap-2">
+            <i class="ph-bold ph-arrows-counter-clockwise text-lg"></i> Compare Match Statistics
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- SECTION 2: Match Overview & Radar Chart (Kekuatan Lini) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Team Overview Cards & Radar -->
+      <section class="lg:col-span-6 glass-panel p-6 shadow-liquid dark:shadow-liquid-dark flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2 text-xs font-semibold tracking-wider text-blue-600 dark:text-blue-400 uppercase">
+              <i class="ph-bold ph-polygon text-sm"></i> Squad Strength Comparison
+            </div>
+            <span class="text-xs text-gray-500">Normalized Scale 0–100</span>
+          </div>
+
+          <!-- Team vs Badge Banner -->
+          <div class="flex items-center justify-between bg-white/40 dark:bg-white/5 rounded-2xl p-4 border border-white/40 dark:border-white/10 mb-6">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-base">A</div>
+              <div>
+                <h3 id="teamANameDisplay" class="font-bold text-sm sm:text-base">Real Madrid</h3>
+                <span class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Home Team</span>
+              </div>
+            </div>
+            <div class="text-center font-bold text-xs text-gray-400 uppercase tracking-widest">VS</div>
+            <div class="flex items-center gap-3 text-right">
+              <div>
+                <h3 id="teamBNameDisplay" class="font-bold text-sm sm:text-base">FC Barcelona</h3>
+                <span class="text-xs text-blue-600 dark:text-blue-400 font-medium">Away Team</span>
+              </div>
+              <div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-base">B</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Radar Chart Container -->
+        <div class="relative w-full h-[280px] sm:h-[320px] flex items-center justify-center">
+          <canvas id="squadRadarChart"></canvas>
+        </div>
+      </section>
+
+      <!-- SECTION 3: Detailed Separated Home vs Away Breakdown -->
+      <section class="lg:col-span-6 glass-panel p-6 shadow-liquid dark:shadow-liquid-dark flex flex-col justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2 text-xs font-semibold tracking-wider text-blue-600 dark:text-blue-400 uppercase">
+              <i class="ph-bold ph-house-line text-sm"></i> Home vs Away Context Breakdown
+            </div>
+            <span class="text-xs text-gray-500">Separated Stats</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <!-- TEAM HOME (TEAM A) SEPARATED BREAKDOWN -->
+            <div class="p-4 bg-white/40 dark:bg-white/5 rounded-2xl border border-white/40 dark:border-white/10 space-y-3">
+              <div class="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <span id="teamANameHomeLabel">Real Madrid (Home Team)</span>
+              </div>
+              
+              <div class="space-y-2 text-xs">
+                <!-- Goals Home vs Away -->
+                <div class="bg-white/50 dark:bg-black/20 p-2.5 rounded-xl space-y-1">
+                  <div class="text-[11px] text-gray-500">Avg Goals Scored</div>
+                  <div class="flex justify-between font-bold">
+                    <span>Pas Home: <strong id="teamAGoalsHome" class="text-emerald-600">2.40</strong></span>
+                    <span>Pas Away: <strong id="teamAGoalsAway" class="text-gray-700 dark:text-gray-300">1.60</strong></span>
+                  </div>
+                </div>
+
+                <!-- Wins Home vs Away -->
+                <div class="bg-white/50 dark:bg-black/20 p-2.5 rounded-xl space-y-1">
+                  <div class="text-[11px] text-gray-500">Win Count (Last 10)</div>
+                  <div class="flex justify-between font-bold">
+                    <span>Win Home: <strong id="teamAWinsHome" class="text-emerald-600">8 Match</strong></span>
+                    <span>Win Away: <strong id="teamAWinsAway" class="text-gray-700 dark:text-gray-300">5 Match</strong></span>
+                  </div>
+                </div>
+
+                <!-- Corners Home vs Away -->
+                <div class="bg-white/50 dark:bg-black/20 p-2.5 rounded-xl space-y-1">
+                  <div class="text-[11px] text-gray-500">Avg Corners</div>
+                  <div class="flex justify-between font-bold">
+                    <span>Corner Home: <strong id="teamACornersHome" class="text-emerald-600">6.2</strong></span>
+                    <span>Corner Away: <strong id="teamACornersAway" class="text-gray-700 dark:text-gray-300">4.8</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TEAM AWAY (TEAM B) SEPARATED BREAKDOWN -->
+            <div class="p-4 bg-white/40 dark:bg-white/5 rounded-2xl border border-white/40 dark:border-white/10 space-y-3">
+              <div class="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                <span id="teamBNameAwayLabel">FC Barcelona (Away Team)</span>
+              </div>
+              
+              <div class="space-y-2 text-xs">
+                <!-- Goals Home vs Away -->
+                <div class="bg-white/50 dark:bg-black/20 p-2.5 rounded-xl space-y-1">
+                  <div class="text-[11px] text-gray-500">Avg Goals Scored</div>
+                  <div class="flex justify-between font-bold">
+                    <span>Pas Home: <strong id="teamBGoalsHome" class="text-gray-700 dark:text-gray-300">2.10</strong></span>
+                    <span>Pas Away: <strong id="teamBGoalsAway" class="text-blue-600">1.90</strong></span>
+                  </div>
+                </div>
+
+                <!-- Wins Home vs Away -->
+                <div class="bg-white/50 dark:bg-black/20 p-2.5 rounded-xl space-y-1">
+                  <div class="text-[11px] text-gray-500">Win Count (Last 10)</div>
+                  <div class="flex justify-between font-bold">
+                    <span>Win Home: <strong id="teamBWinsHome" class="text-gray-700 dark:text-gray-300">7 Match</strong></span>
+                    <span>Win Away: <strong id="teamBWinsAway" class="text-blue-600">6 Match</strong></span>
+                  </div>
+                </div>
+
+                <!-- Corners Home vs Away -->
+                <div class="bg-white/50 dark:bg-black/20 p-2.5 rounded-xl space-y-1">
+                  <div class="text-[11px] text-gray-500">Avg Corners</div>
+                  <div class="flex justify-between font-bold">
+                    <span>Corner Home: <strong id="teamBCornersHome" class="text-gray-700 dark:text-gray-300">5.9</strong></span>
+                    <span>Corner Away: <strong id="teamBCornersAway" class="text-blue-600">5.4</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- SECTION: Head to Head (H2H) & Last 5 Matches -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Head to Head (H2H) Card -->
+      <section class="lg:col-span-5 glass-panel p-6 shadow-liquid dark:shadow-liquid-dark space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 text-xs font-semibold tracking-wider text-blue-600 dark:text-blue-400 uppercase">
+            <i class="ph-bold ph-swords text-sm"></i> Head-to-Head (H2H)
+          </div>
+          <span class="text-xs text-gray-500">Last 5 Meetings</span>
+        </div>
+
+        <div id="h2hList" class="space-y-2.5 text-xs">
+          <!-- Populated via JS -->
+        </div>
+      </section>
+
+      <!-- Last 5 Matches (Both Teams) -->
+      <section class="lg:col-span-7 glass-panel p-6 shadow-liquid dark:shadow-liquid-dark space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 text-xs font-semibold tracking-wider text-blue-600 dark:text-blue-400 uppercase">
+            <i class="ph-bold ph-list-numbers text-sm"></i> Last 5 Matches Scores
+          </div>
+          <span class="text-xs text-gray-500">Recent Results</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Team A Last 5 -->
+          <div class="space-y-2">
+            <span id="last5TitleA" class="text-xs font-bold text-emerald-600 dark:text-emerald-400 block">Real Madrid</span>
+            <div id="last5ListA" class="space-y-2 text-xs">
+              <!-- Populated via JS -->
+            </div>
+          </div>
+
+          <!-- Team B Last 5 -->
+          <div class="space-y-2">
+            <span id="last5TitleB" class="text-xs font-bold text-blue-600 dark:text-blue-400 block">FC Barcelona</span>
+            <div id="last5ListB" class="space-y-2 text-xs">
+              <!-- Populated via JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- SECTION 4: Goal Timing Distribution (Segmented Bar per Interval) -->
+    <section class="glass-panel p-6 sm:p-8 shadow-liquid dark:shadow-liquid-dark space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <div class="flex items-center gap-2 text-xs font-semibold tracking-wider text-blue-600 dark:text-blue-400 uppercase">
+            <i class="ph-bold ph-clock-afternoon text-sm"></i> Goal Timing Distribution
+          </div>
+          <h2 class="text-base font-bold">Goal Frequency Across 90 Minutes</h2>
+        </div>
+        
+        <!-- Filter Tabs -->
+        <div class="flex gap-1 p-1 bg-gray-200/60 dark:bg-white/10 rounded-full text-xs font-medium w-fit">
+          <button onclick="setDistributionFilter('all')" id="btnDistAll" class="px-3 py-1 rounded-full bg-white dark:bg-gray-800 shadow-sm text-gray-900 dark:text-white">All Matches</button>
+          <button onclick="setDistributionFilter('home')" id="btnDistHome" class="px-3 py-1 rounded-full text-gray-600 dark:text-gray-400 hover:text-gray-900">Home/Away</button>
+        </div>
+      </div>
+
+      <!-- Segmented Bar Visualization Container -->
+      <div class="space-y-6 bg-white/30 dark:bg-white/5 p-4 sm:p-6 rounded-3xl border border-white/40 dark:border-white/10">
+        
+        <!-- Team A Timeline Row -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Team A (Real Madrid)
+            </span>
+            <span id="teamATotalGoalsCount" class="text-gray-500 font-semibold">Total: 25 Goals</span>
+          </div>
+          
+          <!-- Segmented Timeline Bar Team A -->
+          <div class="space-y-1">
+            <div id="timelineTeamA" class="w-full h-8 flex rounded-2xl overflow-hidden gap-1 p-1 bg-black/5 dark:bg-white/5">
+              <!-- Rendered Dynamically via JS -->
+            </div>
+            <!-- Goal Numbers Row Above/Below -->
+            <div id="labelsTeamA" class="flex w-full text-[11px] font-bold text-center px-1">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Color Legend (Interval Menit) -->
+        <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-6 py-2 border-y border-gray-200/50 dark:border-white/10 text-xs">
+          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#ff2d55]"></span><span class="font-medium">00-15'</span></div>
+          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#ff9500]"></span><span class="font-medium">16-30'</span></div>
+          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#ffcc00]"></span><span class="font-medium">31-45'</span></div>
+          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#34c759]"></span><span class="font-medium">46-60'</span></div>
+          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#007aff]"></span><span class="font-medium">61-75'</span></div>
+          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#af52de]"></span><span class="font-medium">76-90+'</span></div>
+        </div>
+
+        <!-- Team B Timeline Row -->
+        <div class="space-y-2">
+          <!-- Goal Numbers Row -->
+          <div id="labelsTeamB" class="flex w-full text-[11px] font-bold text-center px-1">
+            <!-- Rendered via JS -->
+          </div>
+          
+          <!-- Segmented Timeline Bar Team B -->
+          <div id="timelineTeamB" class="w-full h-8 flex rounded-2xl overflow-hidden gap-1 p-1 bg-black/5 dark:bg-white/5">
+            <!-- Rendered Dynamically via JS -->
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-1">
+            <span class="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Team B (FC Barcelona)
+            </span>
+            <span id="teamBTotalGoalsCount" class="text-gray-500 font-semibold">Total: 22 Goals</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 5: Independent Monte Carlo Simulation Results (Murni Simulasi) -->
+    <section class="glass-panel p-6 sm:p-8 shadow-liquid dark:shadow-liquid-dark space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-2 text-xs font-semibold tracking-wider text-purple-600 dark:text-purple-400 uppercase">
+            <i class="ph-bold ph-cpu text-sm"></i> Independent Simulation Engine
+          </div>
+          <h2 class="text-base font-bold">Monte Carlo Engine Results (10,000 Iterations)</h2>
+        </div>
+        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+          Pure Statistical Probabilities
+        </span>
+      </div>
+
+      <!-- Probability Bar & Outcome Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        
+        <!-- Win / Draw / Loss Probabilities -->
+        <div class="md:col-span-2 p-5 bg-white/40 dark:bg-white/5 rounded-3xl border border-white/40 dark:border-white/10 space-y-4">
+          <div class="text-xs font-semibold text-gray-500">1X2 Match Outcome Probabilities</div>
+          
+          <div class="grid grid-cols-3 gap-3 text-center">
+            <div class="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+              <div class="text-xs text-emerald-700 dark:text-emerald-400 font-medium">Home Win</div>
+              <div id="mcProbHome" class="text-xl sm:text-2xl font-bold text-emerald-600">48.5%</div>
+            </div>
+            <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+              <div class="text-xs text-amber-700 dark:text-amber-400 font-medium">Draw</div>
+              <div id="mcProbDraw" class="text-xl sm:text-2xl font-bold text-amber-600">26.2%</div>
+            </div>
+            <div class="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+              <div class="text-xs text-blue-700 dark:text-blue-400 font-medium">Away Win</div>
+              <div id="mcProbAway" class="text-xl sm:text-2xl font-bold text-blue-600">25.3%</div>
+            </div>
+          </div>
+
+          <!-- Combined Probability Bar -->
+          <div class="w-full bg-gray-200 dark:bg-gray-700 h-3 rounded-full overflow-hidden flex">
+            <div id="mcBarHome" class="bg-emerald-500 h-full transition-all duration-500" style="width: 48.5%"></div>
+            <div id="mcBarDraw" class="bg-amber-400 h-full transition-all duration-500" style="width: 26.2%"></div>
+            <div id="mcBarAway" class="bg-blue-500 h-full transition-all duration-500" style="width: 25.3%"></div>
+          </div>
+
+          <div class="flex justify-between text-xs text-gray-500 pt-1">
+            <span>Simulated Average Match Goals: <strong id="mcAvgGoals" class="text-gray-800 dark:text-gray-200">2.84 Goals</strong></span>
+            <span>Poisson Distribution Model</span>
+          </div>
+        </div>
+
+        <!-- Top 5 Most Frequent Scorelines -->
+        <div class="p-5 bg-white/40 dark:bg-white/5 rounded-3xl border border-white/40 dark:border-white/10 space-y-3">
+          <div class="text-xs font-semibold text-gray-500">Top 5 Most Frequent Scorelines</div>
+          
+          <div id="mcTopScoresList" class="space-y-2 text-xs">
+            <!-- Dynamically Populated via JS -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 6: Statistical-Based Selections (Pilihan Terbaik) -->
+    <section class="glass-panel p-6 sm:p-8 shadow-liquid dark:shadow-liquid-dark space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <div class="flex items-center gap-2 text-xs font-semibold tracking-wider text-amber-600 dark:text-amber-400 uppercase">
+            <i class="ph-bold ph-star text-sm"></i> Statistical-Based Selections
+          </div>
+          <h2 class="text-base font-bold">Pilihan Terbaik (Integrated Model & Risk Rating)</h2>
+        </div>
+        <div class="text-xs text-gray-500">
+          Combines Historical Data + Venue Context + Monte Carlo Weight
+        </div>
+      </div>
+
+      <!-- Market Recommendations Grid -->
+      <div id="marketSelectionsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered Dynamically via JS (1X2, DNB, Double Chance, Total Goals, HT Total, Team Totals, Handicaps, Corners, Correct Score) -->
+      </div>
+    </section>
+
+  </div>
+
+  <!-- SECTION 7: Floating Navbar (iOS Liquid Style) -->
+  <nav class="floating-nav px-6 py-3 flex items-center gap-6 shadow-floating-nav">
+    <button onclick="scrollToTop()" class="flex flex-col items-center gap-0.5 text-blue-600 dark:text-blue-400 font-semibold text-[11px]">
+      <i class="ph-bold ph-house text-xl"></i>
+      <span>Overview</span>
+    </button>
+    <button onclick="scrollToSection('squadRadarChart')" class="flex flex-col items-center gap-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 text-[11px]">
+      <i class="ph-bold ph-chart-bar text-xl"></i>
+      <span>Radar</span>
+    </button>
+    <button onclick="scrollToSection('timelineTeamA')" class="flex flex-col items-center gap-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 text-[11px]">
+      <i class="ph-bold ph-clock text-xl"></i>
+      <span>Timing</span>
+    </button>
+    <button onclick="scrollToSection('mcProbHome')" class="flex flex-col items-center gap-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 text-[11px]">
+      <i class="ph-bold ph-cpu text-xl"></i>
+      <span>Simulation</span>
+    </button>
+    <button onclick="scrollToSection('marketSelectionsGrid')" class="flex flex-col items-center gap-0.5 text-amber-600 dark:text-amber-400 font-semibold text-[11px]">
+      <i class="ph-bold ph-star text-xl"></i>
+      <span>Selections</span>
+    </button>
+  </nav>
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    // Global State & Data
+    let radarChartInstance = null;
+    const intervalColors = ['#ff2d55', '#ff9500', '#ffcc00', '#34c759', '#007aff', '#af52de'];
+    const intervalLabels = ["00-15'", "16-30'", "31-45'", "46-60'", "61-75'", "76-90+'"];
+
+    // Dataset Mock Templates
+    const mockDatasets = {
+      default: {
+        teamA: { 
+          name: "Real Madrid", attack: 85, midfield: 88, defence: 82, goalkeepers: 86, rating: 87, squad: 89,
+          goalsHome: 2.4, goalsAway: 1.6, winsHome: 8, winsAway: 5, cornersHome: 6.2, cornersAway: 4.8,
+          goalsDist: [4, 6, 3, 5, 4, 8],
+          last5: [
+            { opponent: 'vs Girona', score: '3 - 0', result: 'W' },
+            { opponent: 'vs Atletico', score: '1 - 1', result: 'D' },
+            { opponent: 'vs Sevilla', score: '2 - 1', result: 'W' },
+            { opponent: 'vs Leipzig', score: '1 - 0', result: 'W' },
+            { opponent: 'vs Valencia', score: '2 - 2', result: 'D' }
+          ]
+        },
+        teamB: { 
+          name: "FC Barcelona", attack: 83, midfield: 86, defence: 78, goalkeepers: 80, rating: 84, squad: 85,
+          goalsHome: 2.1, goalsAway: 1.9, winsHome: 7, winsAway: 6, cornersHome: 5.9, cornersAway: 5.4,
+          goalsDist: [3, 4, 5, 3, 6, 7],
+          last5: [
+            { opponent: 'vs Celta Vigo', score: '2 - 1', result: 'W' },
+            { opponent: 'vs Napoli', score: '1 - 1', result: 'D' },
+            { opponent: 'vs Granada', score: '3 - 3', result: 'D' },
+            { opponent: 'vs Alaves', score: '3 - 1', result: 'W' },
+            { opponent: 'vs Osasuna', score: '1 - 0', result: 'W' }
+          ]
+        },
+        h2h: [
+          { date: '21 Oct 2025', home: 'Real Madrid', away: 'FC Barcelona', score: '2 - 1' },
+          { date: '21 Apr 2025', home: 'Real Madrid', away: 'FC Barcelona', score: '3 - 2' },
+          { date: '28 Oct 2024', home: 'FC Barcelona', away: 'Real Madrid', score: '1 - 2' },
+          { date: '06 Apr 2024', home: 'FC Barcelona', away: 'Real Madrid', score: '0 - 4' },
+          { date: '16 Jan 2024', home: 'Real Madrid', away: 'FC Barcelona', score: '4 - 1' }
+        ]
+      },
+      alternate: {
+        teamA: { 
+          name: "Arsenal FC", attack: 82, midfield: 85, defence: 88, goalkeepers: 84, rating: 85, squad: 86,
+          goalsHome: 2.1, goalsAway: 1.5, winsHome: 7, winsAway: 5, cornersHome: 6.8, cornersAway: 5.1,
+          goalsDist: [5, 3, 4, 6, 3, 5],
+          last5: [
+            { opponent: 'vs Newcastle', score: '4 - 1', result: 'W' },
+            { opponent: 'vs Porto', score: '0 - 1', result: 'L' },
+            { opponent: 'vs Burnley', score: '5 - 0', result: 'W' },
+            { opponent: 'vs West Ham', score: '6 - 0', result: 'W' },
+            { opponent: 'vs Liverpool', score: '3 - 1', result: 'W' }
+          ]
+        },
+        teamB: { 
+          name: "Man City", attack: 89, midfield: 91, defence: 85, goalkeepers: 87, rating: 89, squad: 92,
+          goalsHome: 2.6, goalsAway: 2.2, winsHome: 8, winsAway: 7, cornersHome: 7.2, cornersAway: 6.0,
+          goalsDist: [2, 5, 6, 4, 7, 8],
+          last5: [
+            { opponent: 'vs Bournemouth', score: '1 - 0', result: 'W' },
+            { opponent: 'vs Brentford', score: '1 - 0', result: 'W' },
+            { opponent: 'vs Chelsea', score: '1 - 1', result: 'D' },
+            { opponent: 'vs Copenhagen', score: '3 - 1', result: 'W' },
+            { opponent: 'vs Everton', score: '2 - 0', result: 'W' }
+          ]
+        },
+        h2h: [
+          { date: '31 Mar 2025', home: 'Man City', away: 'Arsenal FC', score: '0 - 0' },
+          { date: '08 Oct 2024', home: 'Arsenal FC', away: 'Man City', score: '1 - 0' },
+          { date: '06 Aug 2024', home: 'Arsenal FC', away: 'Man City', score: '1 - 1' },
+          { date: '27 Apr 2024', home: 'Man City', away: 'Arsenal FC', score: '4 - 1' },
+          { date: '15 Feb 2024', home: 'Arsenal FC', away: 'Man City', score: '1 - 3' }
+        ]
+      }
+    };
+
+    let currentDataset = mockDatasets.default;
+
+    // Initialization on Load
+    window.onload = function () {
+      initThemeToggle();
+      initRadarChart();
+      renderHomeAwayContext();
+      renderH2HandLast5();
+      renderGoalTimingDistribution();
+      renderMonteCarloResults();
+      renderStatisticalSelections();
+    };
+
+    // Render Home vs Away Context Separated
+    function renderHomeAwayContext() {
+      const a = currentDataset.teamA;
+      const b = currentDataset.teamB;
+
+      document.getElementById('teamANameHomeLabel').innerText = `${a.name} (Home Team)`;
+      document.getElementById('teamAGoalsHome').innerText = a.goalsHome.toFixed(2);
+      document.getElementById('teamAGoalsAway').innerText = a.goalsAway.toFixed(2);
+      document.getElementById('teamAWinsHome').innerText = `${a.winsHome} Match`;
+      document.getElementById('teamAWinsAway').innerText = `${a.winsAway} Match`;
+      document.getElementById('teamACornersHome').innerText = a.cornersHome.toFixed(1);
+      document.getElementById('teamACornersAway').innerText = a.cornersAway.toFixed(1);
+
+      document.getElementById('teamBNameAwayLabel').innerText = `${b.name} (Away Team)`;
+      document.getElementById('teamBGoalsHome').innerText = b.goalsHome.toFixed(2);
+      document.getElementById('teamBGoalsAway').innerText = b.goalsAway.toFixed(2);
+      document.getElementById('teamBWinsHome').innerText = `${b.winsHome} Match`;
+      document.getElementById('teamBWinsAway').innerText = `${b.winsAway} Match`;
+      document.getElementById('teamBCornersHome').innerText = b.cornersHome.toFixed(1);
+      document.getElementById('teamBCornersAway').innerText = b.cornersAway.toFixed(1);
+    }
+
+    // Render Head-to-Head & Last 5 Matches
+    function renderH2HandLast5() {
+      // H2H
+      const h2hContainer = document.getElementById('h2hList');
+      h2hContainer.innerHTML = '';
+      currentDataset.h2h.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-2.5 rounded-xl bg-white/40 dark:bg-white/5 border border-white/20';
+        row.innerHTML = `
+          <span class="text-[10px] text-gray-500 font-medium">${item.date}</span>
+          <span class="font-semibold text-gray-700 dark:text-gray-300">${item.home} vs ${item.away}</span>
+          <span class="font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md">${item.score}</span>
+        `;
+        h2hContainer.appendChild(row);
+      });
+
+      // Last 5 Team A
+      document.getElementById('last5TitleA').innerText = currentDataset.teamA.name;
+      const last5ContainerA = document.getElementById('last5ListA');
+      last5ContainerA.innerHTML = '';
+      currentDataset.teamA.last5.forEach(m => {
+        const row = document.createElement('div');
+        const badgeColor = m.result === 'W' ? 'bg-emerald-500 text-white' : m.result === 'D' ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white';
+        row.className = 'flex items-center justify-between p-2 rounded-xl bg-white/40 dark:bg-white/5 border border-white/20';
+        row.innerHTML = `
+          <span class="text-gray-600 dark:text-gray-400 font-medium">${m.opponent}</span>
+          <div class="flex items-center gap-1.5 font-bold">
+            <span>${m.score}</span>
+            <span class="w-4 h-4 rounded text-[9px] flex items-center justify-center ${badgeColor}">${m.result}</span>
+          </div>
+        `;
+        last5ContainerA.appendChild(row);
+      });
+
+      // Last 5 Team B
+      document.getElementById('last5TitleB').innerText = currentDataset.teamB.name;
+      const last5ContainerB = document.getElementById('last5ListB');
+      last5ContainerB.innerHTML = '';
+      currentDataset.teamB.last5.forEach(m => {
+        const row = document.createElement('div');
+        const badgeColor = m.result === 'W' ? 'bg-emerald-500 text-white' : m.result === 'D' ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white';
+        row.className = 'flex items-center justify-between p-2 rounded-xl bg-white/40 dark:bg-white/5 border border-white/20';
+        row.innerHTML = `
+          <span class="text-gray-600 dark:text-gray-400 font-medium">${m.opponent}</span>
+          <div class="flex items-center gap-1.5 font-bold">
+            <span>${m.score}</span>
+            <span class="w-4 h-4 rounded text-[9px] flex items-center justify-center ${badgeColor}">${m.result}</span>
+          </div>
+        `;
+        last5ContainerB.appendChild(row);
+      });
+    }
+
+    // SECTION 2: Radar Chart Initialization
+    function initRadarChart() {
+      const ctx = document.getElementById('squadRadarChart').getContext('2d');
+      const isDark = document.documentElement.classList.contains('dark');
+      
+      radarChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['Attack', 'Midfield', 'Defence', 'Goalkeepers', 'Squad Depth', 'Rating'],
+          datasets: [
+            {
+              label: currentDataset.teamA.name,
+              data: [
+                currentDataset.teamA.attack,
+                currentDataset.teamA.midfield,
+                currentDataset.teamA.defence,
+                currentDataset.teamA.goalkeepers,
+                currentDataset.teamA.squad,
+                currentDataset.teamA.rating
+              ],
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.25)',
+              borderWidth: 2.5,
+              pointBackgroundColor: '#10b981'
+            },
+            {
+              label: currentDataset.teamB.name,
+              data: [
+                currentDataset.teamB.attack,
+                currentDataset.teamB.midfield,
+                currentDataset.teamB.defence,
+                currentDataset.teamB.goalkeepers,
+                currentDataset.teamB.squad,
+                currentDataset.teamB.rating
+              ],
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.25)',
+              borderWidth: 2.5,
+              pointBackgroundColor: '#3b82f6'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              angleLines: { color: 'rgba(150, 150, 150, 0.2)' },
+              grid: { color: 'rgba(150, 150, 150, 0.2)' },
+              pointLabels: {
+                font: { size: 11, family: '-apple-system', weight: 'bold' },
+                color: isDark ? '#e5e7eb' : '#374151'
+              },
+              ticks: { display: false, stepSize: 20 },
+              min: 50,
+              max: 100
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                boxWidth: 12,
+                font: { family: '-apple-system', size: 12, weight: 'bold' }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // SECTION 4: Goal Timing Distribution Rendering (Segmented Bar Timeline)
+    function renderGoalTimingDistribution() {
+      const distA = currentDataset.teamA.goalsDist;
+      const distB = currentDataset.teamB.goalsDist;
+      
+      const totalA = distA.reduce((a, b) => a + b, 0);
+      const totalB = distB.reduce((a, b) => a + b, 0);
+
+      document.getElementById('teamATotalGoalsCount').innerText = `Total: ${totalA} Goals`;
+      document.getElementById('teamBTotalGoalsCount').innerText = `Total: ${totalB} Goals`;
+
+      // Timeline Bars & Labels Containers
+      const timelineA = document.getElementById('timelineTeamA');
+      const labelsA = document.getElementById('labelsTeamA');
+      const timelineB = document.getElementById('timelineTeamB');
+      const labelsB = document.getElementById('labelsTeamB');
+
+      timelineA.innerHTML = '';
+      labelsA.innerHTML = '';
+      timelineB.innerHTML = '';
+      labelsB.innerHTML = '';
+
+      // Build Team A Segments
+      distA.forEach((count, i) => {
+        const flexWeight = count;
+        // Segment Bar
+        const seg = document.createElement('div');
+        seg.className = 'timeline-segment rounded-xl flex items-center justify-center text-white font-bold text-xs shadow-sm';
+        seg.style.flex = `${flexWeight} 1 0%`;
+        seg.style.backgroundColor = intervalColors[i];
+        seg.title = `${intervalLabels[i]}: ${count} goals`;
+        timelineA.appendChild(seg);
+
+        // Label Column
+        const lbl = document.createElement('div');
+        lbl.style.flex = `${flexWeight} 1 0%`;
+        lbl.innerText = `${count}`;
+        labelsA.appendChild(lbl);
+      });
+
+      // Build Team B Segments
+      distB.forEach((count, i) => {
+        const flexWeight = count;
+        // Segment Bar
+        const seg = document.createElement('div');
+        seg.className = 'timeline-segment rounded-xl flex items-center justify-center text-white font-bold text-xs shadow-sm';
+        seg.style.flex = `${flexWeight} 1 0%`;
+        seg.style.backgroundColor = intervalColors[i];
+        seg.title = `${intervalLabels[i]}: ${count} goals`;
+        timelineB.appendChild(seg);
+
+        // Label Column
+        const lbl = document.createElement('div');
+        lbl.style.flex = `${flexWeight} 1 0%`;
+        lbl.innerText = `${count}`;
+        labelsB.appendChild(lbl);
+      });
+    }
+
+    // SECTION 5: Independent Monte Carlo Engine Output
+    function renderMonteCarloResults() {
+      // Mock Probabilities
+      const homeWin = 48.5;
+      const draw = 26.2;
+      const awayWin = 25.3;
+
+      document.getElementById('mcProbHome').innerText = `${homeWin}%`;
+      document.getElementById('mcProbDraw').innerText = `${draw}%`;
+      document.getElementById('mcProbAway').innerText = `${awayWin}%`;
+
+      document.getElementById('mcBarHome').style.width = `${homeWin}%`;
+      document.getElementById('mcBarDraw').style.width = `${draw}%`;
+      document.getElementById('mcBarAway').style.width = `${awayWin}%`;
+
+      // Render Top 5 Scorelines
+      const topScores = [
+        { score: '2 - 1', prob: '14.2%', teamWin: 'home' },
+        { score: '1 - 1', prob: '12.8%', teamWin: 'draw' },
+        { score: '2 - 0', prob: '10.5%', teamWin: 'home' },
+        { score: '1 - 2', prob: '8.4%', teamWin: 'away' },
+        { score: '3 - 1', prob: '6.7%', teamWin: 'home' },
+      ];
+
+      const listContainer = document.getElementById('mcTopScoresList');
+      listContainer.innerHTML = '';
+
+      topScores.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-2 rounded-xl bg-white/40 dark:bg-white/5 border border-white/20';
+        row.innerHTML = `
+          <span class="font-bold tracking-wider">${item.score}</span>
+          <span class="font-semibold px-2 py-0.5 rounded-full text-[10px] ${
+            item.teamWin === 'home' ? 'bg-emerald-500/10 text-emerald-600' :
+            item.teamWin === 'draw' ? 'bg-amber-500/10 text-amber-600' : 'bg-blue-500/10 text-blue-600'
+          }">${item.prob} frequency</span>
+        `;
+        listContainer.appendChild(row);
+      });
+    }
+
+    // SECTION 6: Statistical Selections (Pilihan Terbaik)
+    function renderStatisticalSelections() {
+      const selections = [
+        { market: '1X2', pick: 'Home Win (Team A)', risk: 'Low Risk', text: 'Statistical support high: 70% Home win rate in last 10 venue matches.' },
+        { market: 'Draw No Bet (DNB)', pick: 'Team A (DNB)', risk: 'Low Risk', text: 'Team A unbeaten in 90% of home fixtures this season.' },
+        { market: 'Double Chance', pick: '1X (Home or Draw)', risk: 'Low Risk', text: 'Very high historical consistency across past H2H matches.' },
+        { market: 'Both Teams To Score (BTTS)', pick: 'Yes (BTTS - Yes)', risk: 'Low Risk', text: '80% of both teams home/away games yielded goals on both sides.' },
+        { market: 'Total Goals', pick: 'Over 2.5 Goals', risk: 'Medium Risk', text: 'Combined xG average sits at 3.10 with high late-game distribution.' },
+        { market: 'HT Total Goals', pick: 'Over 0.5 HT', risk: 'Low Risk', text: 'Both teams scored 78% of their goals before the 45+ minute interval.' },
+        { market: 'Team Total Home', pick: 'Team A Over 1.5', risk: 'Medium Risk', text: 'Team A averaged 2.4 goals per home match in last sample.' },
+        { market: 'Team Total Away', pick: 'Team B Under 1.5', risk: 'Medium Risk', text: 'Team B away goal output drops 32% against top 4 defenses.' },
+        { market: 'Asian Handicap', pick: 'Team A -0.75', risk: 'Medium Risk', text: 'Simulated win margin favors Team A by 1.15 goals.' },
+        { market: 'Total Corner', pick: 'Over 9.5 Corners', risk: 'Low Risk', text: 'Combined average corners per match equals 11.6.' },
+        { market: 'Correct Score', pick: '2 - 1 / 3 - 1', risk: 'High Risk', text: 'Highest Monte Carlo frequency output with elevated variance.' },
+      ];
+
+      const grid = document.getElementById('marketSelectionsGrid');
+      grid.innerHTML = '';
+
+      selections.forEach(item => {
+        const card = document.createElement('div');
+        const badgeColor = 
+          item.risk === 'Low Risk' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+          item.risk === 'Medium Risk' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
+          'bg-rose-500/10 text-rose-600 border-rose-500/20';
+
+        card.className = 'p-4 rounded-3xl bg-white/40 dark:bg-white/5 border border-white/40 dark:border-white/10 space-y-2 hover:border-blue-500/40 transition';
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">${item.market}</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badgeColor}">${item.risk}</span>
+          </div>
+          <div class="text-sm font-bold text-gray-900 dark:text-gray-100">${item.pick}</div>
+          <p class="text-xs text-gray-500 leading-relaxed">${item.text}</p>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Dynamic Form Interactivity Action
+    function handleCompare(e) {
+      e.preventDefault();
+
+      // Toggle dataset to simulate dynamic updating
+      currentDataset = (currentDataset === mockDatasets.default) ? mockDatasets.alternate : mockDatasets.default;
+
+      // Update Header Text Displays
+      document.getElementById('teamANameDisplay').innerText = currentDataset.teamA.name;
+      document.getElementById('teamBNameDisplay').innerText = currentDataset.teamB.name;
+
+      // Update Radar Data
+      radarChartInstance.data.datasets[0].label = currentDataset.teamA.name;
+      radarChartInstance.data.datasets[0].data = [
+        currentDataset.teamA.attack, currentDataset.teamA.midfield, currentDataset.teamA.defence,
+        currentDataset.teamA.goalkeepers, currentDataset.teamA.squad, currentDataset.teamA.rating
+      ];
+      radarChartInstance.data.datasets[1].label = currentDataset.teamB.name;
+      radarChartInstance.data.datasets[1].data = [
+        currentDataset.teamB.attack, currentDataset.teamB.midfield, currentDataset.teamB.defence,
+        currentDataset.teamB.goalkeepers, currentDataset.teamB.squad, currentDataset.teamB.rating
+      ];
+      radarChartInstance.update();
+
+      // Re-render Components
+      renderHomeAwayContext();
+      renderH2HandLast5();
+      renderGoalTimingDistribution();
+      renderMonteCarloResults();
+      renderStatisticalSelections();
+
+      // Smooth scroll to results
+      scrollToSection('squadRadarChart');
+    }
+
+    // Helper Filter Trigger
+    function setDistributionFilter(type) {
+      const btnAll = document.getElementById('btnDistAll');
+      const btnHome = document.getElementById('btnDistHome');
+
+      if(type === 'all') {
+        btnAll.className = "px-3 py-1 rounded-full bg-white dark:bg-gray-800 shadow-sm text-gray-900 dark:text-white";
+        btnHome.className = "px-3 py-1 rounded-full text-gray-600 dark:text-gray-400 hover:text-gray-900";
+      } else {
+        btnHome.className = "px-3 py-1 rounded-full bg-white dark:bg-gray-800 shadow-sm text-gray-900 dark:text-white";
+        btnAll.className = "px-3 py-1 rounded-full text-gray-600 dark:text-gray-400 hover:text-gray-900";
+      }
+    }
+
+    // Smooth Scrolling Helpers
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function scrollToSection(id) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  </script>
+</body>
+</html>
