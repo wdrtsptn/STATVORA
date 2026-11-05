@@ -1,0 +1,99 @@
+/* -------------------------------------------------------------
+   CUSTOM BACKGROUND IMAGE (EDIT YOUR BACKGROUND IMAGE URL HERE)
+   ------------------------------------------------------------- */
+.bg-custom-image {
+  background-image: url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1920&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+/* Overlay untuk menjaga legibilitas teks di atas background gambar */
+.bg-custom-overlay {
+  background: rgba(242, 242, 247, 0.85);
+  backdrop-filter: blur(12px);
+}
+.dark .bg-custom-overlay {
+  background: rgba(12, 13, 16, 0.88);
+  backdrop-filter: blur(12px);
+}
+
+/* iOS Liquid Glass Effect Utilities (Clean, No Neon Effects) */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 28px;
+}
+
+.dark .glass-panel {
+  background: rgba(26, 27, 32, 0.75);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 9999px;
+  transition: all 0.25s ease;
+}
+
+.dark .glass-input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: #007AFF;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+}
+
+.glass-button {
+  background: #007AFF;
+  color: #ffffff;
+  backdrop-filter: blur(10px);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+}
+
+.glass-button:hover {
+  transform: translateY(-2px);
+  background: #0066CC;
+}
+
+.glass-button:active {
+  transform: translateY(1px);
+}
+
+/* Floating Navigation Styling */
+.floating-nav {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(25px) saturate(200%);
+  -webkit-backdrop-filter: blur(25px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 9999px;
+}
+
+.dark .floating-nav {
+  background: rgba(30, 31, 36, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Custom Horizontal Segmented Bar */
+.timeline-segment {
+  transition: flex-grow 0.5s ease, opacity 0.2s ease;
+}
+.timeline-segment:hover {
+  opacity: 0.85;
+  transform: scaleY(1.08);
+}
